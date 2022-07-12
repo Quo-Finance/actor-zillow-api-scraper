@@ -365,34 +365,6 @@ const getSimpleResultFunction = (input) => {
         favoriteCount: true,
         url: true,
         photos: true,
-        responsivePhotos: true,
-    };
-
-    const fullResult = {
-        zpid: true,
-        address: true,
-        bedrooms: true,
-        bathrooms: true,
-        price: true,
-        yearBuilt: true,
-        longitude: true,
-        latitude: true,
-        homeStatus: true,
-        description: true,
-        livingArea: true,
-        currency: true,
-        homeType: true,
-        datePostedString: true,
-        newConstructionType: true,
-        lastSoldPrice: true,
-        priceChange: true,
-        lotSize: true,
-        propertyTaxRate: true,
-        pageViewCount: true,
-        favoriteCount: true,
-        url: true,
-        photos: true,
-        responsivePhotos: true,
     };
 
     const fullResult = {
