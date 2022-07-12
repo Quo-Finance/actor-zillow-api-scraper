@@ -342,11 +342,12 @@ const getSimpleResultFunction = (input) => {
     // Toggle showing only a subset of result attributes
 
     const simpleResult = {
+        zpid: true,
         address: true,
         bedrooms: true,
         bathrooms: true,
         price: true,
-        yearBuild: true,
+        yearBuilt: true,
         longitude: true,
         latitude: true,
         homeStatus: true,
@@ -364,6 +365,7 @@ const getSimpleResultFunction = (input) => {
         favoriteCount: true,
         url: true,
         photos: true,
+        responsivePhotos: true,
     };
 
     const fullResult = {
