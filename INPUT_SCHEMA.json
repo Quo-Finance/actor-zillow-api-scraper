@@ -7,7 +7,7 @@
             "title": "Test string",
             "type": "string",
             "editor": "textarea",
-            "prefill": "Los Angeles",
+            "prefill": "Palo Alto",
             "description": "Query to search on Zillow.com"
         },
         "type": {
