@@ -4,7 +4,7 @@
     "schemaVersion": 1,
     "properties": {
         "search": {
-            "title": "Test string",
+            "title": "Search",
             "type": "string",
             "editor": "textarea",
             "prefill": "Palo Alto",
