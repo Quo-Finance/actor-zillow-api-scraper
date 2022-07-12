@@ -1,77 +1,84 @@
-const Apify = require('apify');
-const moment = require('moment');
-const Puppeteer = require('puppeteer'); // eslint-disable-line no-unused-vars
-const { createHash } = require('crypto');
-const vm = require('vm');
-const { bboxPolygon, bbox, area, squareGrid } = require('@turf/turf');
-const { LABELS, TYPES, ORIGIN, GetSearchPageState, SearchQueryState } = require('./constants'); // eslint-disable-line no-unused-vars
+// @ts-nocheck
+const Apify = require("apify");
+const moment = require("moment");
+const Puppeteer = require("puppeteer"); // eslint-disable-line no-unused-vars
+const { createHash } = require("crypto");
+const vm = require("vm");
+const { bboxPolygon, bbox, area, squareGrid } = require("@turf/turf");
+const {
+    LABELS,
+    TYPES,
+    ORIGIN,
+    GetSearchPageState,
+    SearchQueryState,
+} = require("./constants"); // eslint-disable-line no-unused-vars
 
 const { log } = Apify.utils;
 
 const mappings = {
-    att: 'keywords',
-    schp: 'isPublicSchool',
-    cityv: 'isCityView',
-    wat: 'isWaterfront',
-    con: 'isCondo',
-    mouv: 'isMountainView',
-    sto: 'singleStory',
-    parka: 'onlyRentalParkingAvailable',
-    mp: 'monthlyPayment',
-    app: 'onlyRentalAcceptsApplications',
-    seo: 'SEOTypedIdField',
-    zo: 'isZillowOwnedOnly',
-    fr: 'isForRent',
-    fsbo: 'isForSaleByOwner',
-    ac: 'hasAirConditioning',
-    apa: 'isApartment',
-    sort: 'sortSelection',
-    schm: 'isMiddleSchool',
-    watv: 'isWaterView',
-    schr: 'isPrivateSchool',
-    inc: 'onlyRentalIncomeRestricted',
-    manu: 'isManufactured',
-    lau: 'onlyRentalInUnitLaundry',
-    cmsn: 'isComingSoon',
-    sf: 'isSingleFamily',
-    fore: 'isForSaleForeclosure',
-    schh: 'isHighSchool',
-    ah: 'isAllHomes',
-    '55plus': 'ageRestricted55Plus',
-    cat: 'onlyRentalCatsAllowed',
-    schc: 'isCharterSchool',
-    pet: 'onlyRentalPetsAllowed',
-    auc: 'isAuction',
-    '3d': 'is3dHome',
-    mf: 'isMultiFamily',
-    nc: 'isNewConstruction',
-    tow: 'isTownhouse',
-    land: 'isLotLand',
-    basu: 'isBasementUnfinished',
-    open: 'isOpenHousesOnly',
-    basf: 'isBasementFinished',
-    dsrc: 'dataSourceSelection',
-    pmf: 'isPreMarketForeclosure',
-    fsba: 'isForSaleByAgent',
-    parks: 'parkingSpots',
-    pf: 'isPreMarketPreForeclosure',
-    gar: 'hasGarage',
-    pool: 'hasPool',
-    sdog: 'onlyRentalSmallDogsAllowed',
-    abo: 'isAcceptingBackupOffersSelected',
-    ldog: 'onlyRentalLargeDogsAllowed',
-    lot: 'lotSize',
-    schb: 'greatSchoolsRating',
-    schu: 'includeUnratedSchools',
-    rs: 'isRecentlySold',
-    pnd: 'isPendingListingsSelected',
-    hc: 'onlyRentalHousingConnector',
-    fmfb: 'onlyRentalFeaturedMultiFamilyBuilding',
-    apco: 'isApartmentOrCondo',
-    nohoa: 'includeHomesWithNoHoaData',
-    sche: 'isElementarySchool',
-    parkv: 'isParkView',
-    sch: 'enableSchools',
+    att: "keywords",
+    schp: "isPublicSchool",
+    cityv: "isCityView",
+    wat: "isWaterfront",
+    con: "isCondo",
+    mouv: "isMountainView",
+    sto: "singleStory",
+    parka: "onlyRentalParkingAvailable",
+    mp: "monthlyPayment",
+    app: "onlyRentalAcceptsApplications",
+    seo: "SEOTypedIdField",
+    zo: "isZillowOwnedOnly",
+    fr: "isForRent",
+    fsbo: "isForSaleByOwner",
+    ac: "hasAirConditioning",
+    apa: "isApartment",
+    sort: "sortSelection",
+    schm: "isMiddleSchool",
+    watv: "isWaterView",
+    schr: "isPrivateSchool",
+    inc: "onlyRentalIncomeRestricted",
+    manu: "isManufactured",
+    lau: "onlyRentalInUnitLaundry",
+    cmsn: "isComingSoon",
+    sf: "isSingleFamily",
+    fore: "isForSaleForeclosure",
+    schh: "isHighSchool",
+    ah: "isAllHomes",
+    "55plus": "ageRestricted55Plus",
+    cat: "onlyRentalCatsAllowed",
+    schc: "isCharterSchool",
+    pet: "onlyRentalPetsAllowed",
+    auc: "isAuction",
+    "3d": "is3dHome",
+    mf: "isMultiFamily",
+    nc: "isNewConstruction",
+    tow: "isTownhouse",
+    land: "isLotLand",
+    basu: "isBasementUnfinished",
+    open: "isOpenHousesOnly",
+    basf: "isBasementFinished",
+    dsrc: "dataSourceSelection",
+    pmf: "isPreMarketForeclosure",
+    fsba: "isForSaleByAgent",
+    parks: "parkingSpots",
+    pf: "isPreMarketPreForeclosure",
+    gar: "hasGarage",
+    pool: "hasPool",
+    sdog: "onlyRentalSmallDogsAllowed",
+    abo: "isAcceptingBackupOffersSelected",
+    ldog: "onlyRentalLargeDogsAllowed",
+    lot: "lotSize",
+    schb: "greatSchoolsRating",
+    schu: "includeUnratedSchools",
+    rs: "isRecentlySold",
+    pnd: "isPendingListingsSelected",
+    hc: "onlyRentalHousingConnector",
+    fmfb: "onlyRentalFeaturedMultiFamilyBuilding",
+    apco: "isApartmentOrCondo",
+    nohoa: "includeHomesWithNoHoaData",
+    sche: "isElementarySchool",
+    parkv: "isParkView",
+    sch: "enableSchools",
 };
 
 const reverseMappings = Object.entries(mappings).reduce((out, [key, value]) => {
@@ -85,7 +92,7 @@ const reverseMappings = Object.entries(mappings).reduce((out, [key, value]) => {
  * @param {Record<string, any>} filter
  */
 const translateQsToFilter = (filter) => {
-    if (!filter || typeof filter !== 'object') {
+    if (!filter || typeof filter !== "object") {
         return {};
     }
 
@@ -101,7 +108,7 @@ const translateQsToFilter = (filter) => {
  * @param {Record<string, any>} filter
  */
 const translateFilterToQs = (filter) => {
-    if (!filter || typeof filter !== 'object') {
+    if (!filter || typeof filter !== "object") {
         return {};
     }
 
@@ -137,17 +144,17 @@ const normalizeZpid = (zpid) => {
  */
 const createZpidsHandler = async (maxItems) => {
     /** @type {Set<string>} */
-    const zpids = new Set(await Apify.getValue('STATE'));
+    const zpids = new Set(await Apify.getValue("STATE"));
 
     maxItems = +maxItems ? +maxItems : 0;
     const initialCount = zpids.size;
 
     const persistState = async () => {
-        await Apify.setValue('STATE', [...zpids.values()]);
+        await Apify.setValue("STATE", [...zpids.values()]);
     };
 
-    Apify.events.on('aborting', persistState);
-    Apify.events.on('migrating', persistState);
+    Apify.events.on("aborting", persistState);
+    Apify.events.on("migrating", persistState);
 
     return {
         persistState,
@@ -176,7 +183,7 @@ const createZpidsHandler = async (maxItems) => {
          * @param {number | undefined | string} zpid
          * @returns zpid was added to the global store
          */
-        add(zpid, key = 'DEFAULT') {
+        add(zpid, key = "DEFAULT") {
             zpid = normalizeZpid(zpid);
 
             if (!zpid) {
@@ -202,8 +209,11 @@ const createZpidsHandler = async (maxItems) => {
  * @param {Record<string,any>} input
  */
 const makeInputBackwardsCompatible = (input) => {
-    if (input && input.extendOutputFunction === '(data) => {\n    return {};\n}') {
-        input.extendOutputFunction = '';
+    if (
+        input &&
+        input.extendOutputFunction === "(data) => {\n    return {};\n}"
+    ) {
+        input.extendOutputFunction = "";
     }
 };
 
@@ -260,15 +270,23 @@ const proxyConfiguration = async ({
     proxyConfig,
     required = true,
     force = Apify.isAtHome(),
-    blacklist = ['GOOGLESERP'],
+    blacklist = ["GOOGLESERP"],
     hint = [],
 }) => {
     const configuration = await Apify.createProxyConfiguration(proxyConfig);
 
     // this works for custom proxyUrls
     if (Apify.isAtHome() && required) {
-        if (!configuration || (!configuration.usesApifyProxy && (!configuration.proxyUrls || !configuration.proxyUrls.length)) || !configuration.newUrl()) {
-            throw new Error('\n=======\nYou must use Apify proxy or custom proxy URLs\n\n=======');
+        if (
+            !configuration ||
+            (!configuration.usesApifyProxy &&
+                (!configuration.proxyUrls ||
+                    !configuration.proxyUrls.length)) ||
+            !configuration.newUrl()
+        ) {
+            throw new Error(
+                "\n=======\nYou must use Apify proxy or custom proxy URLs\n\n======="
+            );
         }
     }
 
@@ -276,13 +294,30 @@ const proxyConfiguration = async ({
     if (force) {
         // only when actually using Apify proxy it needs to be checked for the groups
         if (configuration && configuration.usesApifyProxy) {
-            if (blacklist.some((blacklisted) => (configuration.groups || []).includes(blacklisted))) {
-                throw new Error(`\n=======\nThese proxy groups cannot be used in this actor. Choose other group or contact support@apify.com to give you proxy trial:\n\n*  ${blacklist.join('\n*  ')}\n\n=======`);
+            if (
+                blacklist.some((blacklisted) =>
+                    (configuration.groups || []).includes(blacklisted)
+                )
+            ) {
+                throw new Error(
+                    `\n=======\nThese proxy groups cannot be used in this actor. Choose other group or contact support@apify.com to give you proxy trial:\n\n*  ${blacklist.join(
+                        "\n*  "
+                    )}\n\n=======`
+                );
             }
 
             // specific non-automatic proxy groups like RESIDENTIAL, not an error, just a hint
-            if (hint.length && !hint.some((group) => (configuration.groups || []).includes(group))) {
-                Apify.utils.log.info(`\n=======\nYou can pick specific proxy groups for better experience:\n\n*  ${hint.join('\n*  ')}\n\n=======`);
+            if (
+                hint.length &&
+                !hint.some((group) =>
+                    (configuration.groups || []).includes(group)
+                )
+            ) {
+                Apify.utils.log.info(
+                    `\n=======\nYou can pick specific proxy groups for better experience:\n\n*  ${hint.join(
+                        "\n*  "
+                    )}\n\n=======`
+                );
             }
         }
     }
@@ -310,7 +345,7 @@ const changeHandlePageTimeout = (crawler, handlePageTimeoutSecs) => {
  * @returns {Array<queryState>}
  */
 const splitQueryState = (queryState) => {
-    if (typeof queryState !== 'object') {
+    if (typeof queryState !== "object") {
         return [];
     }
 
@@ -318,16 +353,11 @@ const splitQueryState = (queryState) => {
     const mb = qs.mapBounds;
 
     if (!mb) {
-        log.debug('no mapBounds');
+        log.debug("no mapBounds");
         return [queryState];
     }
 
-    const box = bboxPolygon([
-        mb.west,
-        mb.south,
-        mb.east,
-        mb.north,
-    ]);
+    const box = bboxPolygon([mb.west, mb.south, mb.east, mb.north]);
 
     /**
      * @type {Array<queryState>}
@@ -335,9 +365,9 @@ const splitQueryState = (queryState) => {
     const states = [];
 
     const isBigAreaToCover = !qs.mapZoom || qs.mapZoom < 10;
-    const a = (Math.sqrt(area(box)) / (isBigAreaToCover ? 1000 : 1)) / 4;
+    const a = Math.sqrt(area(box)) / (isBigAreaToCover ? 1000 : 1) / 4;
     const grid = squareGrid(bbox(box), a, {
-        units: isBigAreaToCover ? 'kilometers' : 'meters',
+        units: isBigAreaToCover ? "kilometers" : "meters",
     });
 
     grid.features.forEach(({ geometry }) => {
@@ -353,7 +383,9 @@ const splitQueryState = (queryState) => {
             },
             // eslint-disable-next-line no-nested-ternary
             mapZoom: qs.mapZoom
-                ? (qs.mapZoom < 19 ? qs.mapZoom + 1 : qs.mapZoom)
+                ? qs.mapZoom < 19
+                    ? qs.mapZoom + 1
+                    : qs.mapZoom
                 : 9,
         });
     });
@@ -383,31 +415,39 @@ const getQueryFilterStates = (filterState, type) => {
     };
 
     const needed = {
-        sortSelection: { value: 'days' },
+        sortSelection: { value: "days" },
         isAllHomes: { value: true },
         isAuction: { value: false },
     };
 
     const typeFilters = {
-        sale: [{
-            ...needed,
-        }],
-        fsbo: [{
-            ...needed,
-            isForSaleByAgent: { value: false },
-            isForSaleByOwner: { value: true },
-        }],
-        rent: [{
-            ...needed,
-            isForRent: { value: true },
-            ...rentSoldCommonFilters,
-        }],
-        sold: [{
-            ...needed,
-            ...rentSoldCommonFilters,
-            isForSaleByOwner: { value: false },
-            isRecentlySold: { value: true },
-        }],
+        sale: [
+            {
+                ...needed,
+            },
+        ],
+        fsbo: [
+            {
+                ...needed,
+                isForSaleByAgent: { value: false },
+                isForSaleByOwner: { value: true },
+            },
+        ],
+        rent: [
+            {
+                ...needed,
+                isForRent: { value: true },
+                ...rentSoldCommonFilters,
+            },
+        ],
+        sold: [
+            {
+                ...needed,
+                ...rentSoldCommonFilters,
+                isForSaleByOwner: { value: false },
+                isRecentlySold: { value: true },
+            },
+        ],
         /** @type {Array<any>} */
         all: [],
         /** qs is processed in translateQsToFilter, not from input.type) */
@@ -422,7 +462,7 @@ const getQueryFilterStates = (filterState, type) => {
     typeFilters.all.push(
         ...typeFilters.sale,
         ...typeFilters.sold,
-        ...typeFilters.rent,
+        ...typeFilters.rent
     );
 
     return typeFilters[type];
@@ -438,14 +478,18 @@ const getQueryFilterStates = (filterState, type) => {
 const queryRegionHomes = async (params) => {
     const { qs, wants } = params;
 
-    const url = `https://www.zillow.com/search/GetSearchPageState.htm?searchQueryState=${encodeURIComponent(JSON.stringify(qs))}&wants=${encodeURIComponent(JSON.stringify(wants))}&requestId=${Math.floor(Math.random() * 10) + 1}`;
+    const url = `https://www.zillow.com/search/GetSearchPageState.htm?searchQueryState=${encodeURIComponent(
+        JSON.stringify(qs)
+    )}&wants=${encodeURIComponent(JSON.stringify(wants))}&requestId=${
+        Math.floor(Math.random() * 10) + 1
+    }`;
     const resp = await fetch(url, {
         headers: {
-            accept: '*/*',
+            accept: "*/*",
         },
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
+        method: "GET",
+        mode: "cors",
+        credentials: "include",
     });
 
     const ret = {
@@ -469,44 +513,56 @@ const queryRegionHomes = async (params) => {
  * @param {(param: { cat: 'cat1' | 'cat2', qs: SearchQueryState, url: string, hash: string, result: GetSearchPageState }) => Promise<void>} cb
  * @param {number} [paginationPage]
  */
-const extractQueryStates = async (inputType, page, pageQueryState, cb, paginationPage = 1) => {
+const extractQueryStates = async (
+    inputType,
+    page,
+    pageQueryState,
+    cb,
+    paginationPage = 1
+) => {
     const queryStates = new Set();
     const isDebug = log.getLevel() === log.LEVELS.DEBUG;
 
-    const filterStates = getQueryFilterStates(translateQsToFilter(pageQueryState.filterState), inputType);
+    const filterStates = getQueryFilterStates(
+        translateQsToFilter(pageQueryState.filterState),
+        inputType
+    );
 
     log.debug(`Filter states`, { inputType, count: filterStates.length });
 
     /** @type {Array<['cat1' | 'cat2', any]>} */
     const configs = [
-        ['cat1', { cat1: ['listResults', 'mapResults'] }],
-        ['cat2', { cat2: ['listResults', 'mapResults'], cat1: ['total'] }],
-        ['cat1', { cat1: ['listResults', 'mapResults'], cat2: ['total'] }],
-        ['cat2', { cat1: ['listResults', 'mapResults'] }],
-        ['cat2', { cat2: ['listResults', 'mapResults'] }],
+        ["cat1", { cat1: ["listResults", "mapResults"] }],
+        ["cat2", { cat2: ["listResults", "mapResults"], cat1: ["total"] }],
+        ["cat1", { cat1: ["listResults", "mapResults"], cat2: ["total"] }],
+        ["cat2", { cat1: ["listResults", "mapResults"] }],
+        ["cat2", { cat2: ["listResults", "mapResults"] }],
     ];
 
     for (const [cat, wants] of configs) {
         for (const filterState of filterStates) {
-            const response = await page.evaluate(
-                queryRegionHomes,
-                {
-                    qs: {
-                        ...pageQueryState,
-                        filterState,
-                        category: cat === 'cat1' ? undefined : cat,
-                        pagination: (paginationPage > 1 ? { currentPage: paginationPage } : {}),
-                    },
-                    wants,
-                    cat,
+            const response = await page.evaluate(queryRegionHomes, {
+                qs: {
+                    ...pageQueryState,
+                    filterState,
+                    category: cat === "cat1" ? undefined : cat,
+                    pagination:
+                        paginationPage > 1
+                            ? { currentPage: paginationPage }
+                            : {},
                 },
-            );
+                wants,
+                cat,
+            });
 
             if (response.error) {
                 log.debug(`Request failed`, { pageQueryState, response });
 
                 if (isDebug) {
-                    await Apify.setValue(getUniqueKeyFromQueryState(response.qs), response);
+                    await Apify.setValue(
+                        getUniqueKeyFromQueryState(response.qs),
+                        response
+                    );
                 }
 
                 continue;
@@ -551,16 +607,21 @@ const extractQueryStates = async (inputType, page, pageQueryState, cb, paginatio
  * }} requestParams
  * @returns
  */
-const evaluateQueryZpid = async ({ zpid, detailUrl, queryId, clientVersion }) => {
+const evaluateQueryZpid = async ({
+    zpid,
+    detailUrl,
+    queryId,
+    clientVersion,
+}) => {
     zpid = +zpid || zpid;
 
     const body = JSON.stringify({
-        operationName: 'ForSaleDoubleScrollFullRenderQuery',
+        operationName: "ForSaleDoubleScrollFullRenderQuery",
         variables: {
             zpid,
             contactFormRenderParameter: {
                 isDoubleScroll: true,
-                platform: 'desktop',
+                platform: "desktop",
                 zpid,
             },
         },
@@ -568,26 +629,34 @@ const evaluateQueryZpid = async ({ zpid, detailUrl, queryId, clientVersion }) =>
         queryId,
     });
 
-    const clientId = (clientVersion.includes('/')
-        ? clientVersion.split('/', 2)?.filter?.((r) => r.includes('-')).shift()?.concat('_r')
-            .trim()
-        : null) || 'home-details_r';
+    const clientId =
+        (clientVersion.includes("/")
+            ? clientVersion
+                  .split("/", 2)
+                  ?.filter?.((r) => r.includes("-"))
+                  .shift()
+                  ?.concat("_r")
+                  .trim()
+            : null) || "home-details_r";
 
-    const resp = await fetch(`https://www.zillow.com/graphql/?zpid=${zpid}&contactFormRenderParameter=&queryId=${queryId}&operationName=ForSaleDoubleScrollFullRenderQuery`, {
-        method: 'POST',
-        body,
-        headers: {
-            'client-id': clientId,
-            accept: '*/*',
-            'content-type': 'application/json',
-            origin: document.location.origin,
-        },
-        referrer: document.location.pathname.includes('/homedetails/')
-            ? document.location.href
-            : (detailUrl ? detailUrl : undefined),
-        mode: 'cors',
-        credentials: 'include',
-    });
+    const resp = await fetch(
+        `https://www.zillow.com/graphql/?zpid=${zpid}&contactFormRenderParameter=&queryId=${queryId}&operationName=ForSaleDoubleScrollFullRenderQuery`,
+        {
+            method: "POST",
+            body,
+            headers: {
+                "client-id": clientId,
+                accept: "*/*",
+                "content-type": "application/json",
+                origin: document.location.origin,
+            },
+            referrer: document.location.pathname.includes("/homedetails/")
+                ? document.location.href
+                : detailUrl || undefined,
+            mode: "cors",
+            credentials: "include",
+        }
+    );
 
     if (resp.status !== 200) {
         throw new Error(`Got status ${resp.status} from GraphQL`);
@@ -605,7 +674,12 @@ const evaluateQueryZpid = async ({ zpid, detailUrl, queryId, clientVersion }) =>
  */
 const createQueryZpid = (queryId, clientVersion) => (page, zpid, detailUrl) => {
     // evaluateQueryZpid is a separate function to avoid scope variables re-declaration (zpid, queryId, clientVersion)
-    return page.evaluate(evaluateQueryZpid, { zpid, queryId, clientVersion, detailUrl });
+    return page.evaluate(evaluateQueryZpid, {
+        zpid,
+        queryId,
+        clientVersion,
+        detailUrl,
+    });
 };
 
 /**
@@ -631,12 +705,14 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
     });
 
     if (result.hdpUrl) {
-        result.url = (new URL(result.hdpUrl, ORIGIN)).toString();
+        result.url = new URL(result.hdpUrl, ORIGIN).toString();
         delete result.hdpUrl;
     }
 
     if (result.responsivePhotos) {
-        result.photos = result.responsivePhotos.map((/** @type {{ url: String }} */ hp) => hp.url);
+        result.photos = result.responsivePhotos.map(
+            (/** @type {{ url: String }} */ hp) => hp.url
+        );
         delete result.responsivePhotos;
     }
 
@@ -648,10 +724,11 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
  *
  * @param {Array<any> | Record<string, any>} data
  */
-const quickHash = (data) => createHash('sha256')
-    .update(JSON.stringify(data))
-    .digest('hex')
-    .slice(0, 14);
+const quickHash = (data) =>
+    createHash("sha256")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .slice(0, 14);
 
 /**
  * Apply a label to the given URL for userData. Throws if couldn't be categorized
@@ -661,7 +738,7 @@ const quickHash = (data) => createHash('sha256')
 const getUrlData = (url) => {
     const nUrl = new URL(url, ORIGIN);
 
-    if (/\/\d+_zpid/.test(nUrl.pathname) || nUrl.pathname.startsWith('/b/')) {
+    if (/\/\d+_zpid/.test(nUrl.pathname) || nUrl.pathname.startsWith("/b/")) {
         const zpid = normalizeZpid(nUrl.pathname.match(/\/(\d+)_zpid/)?.[1]);
 
         return {
@@ -670,20 +747,22 @@ const getUrlData = (url) => {
         };
     }
 
-    if (nUrl.searchParams.has('searchQueryState')) {
+    if (nUrl.searchParams.has("searchQueryState")) {
         return {
             label: LABELS.QUERY,
             ignoreFilter: true,
         };
     }
 
-    if (nUrl.pathname.includes('_rb/')) {
+    if (nUrl.pathname.includes("_rb/")) {
         return {
             label: LABELS.QUERY,
         };
     }
 
-    throw new Error(`\n\n\n\nThe url provided "${nUrl.toString()}" isn't supported. Use a proper listing url containing a ?searchQueryState= parameter\n\n\n\n`);
+    throw new Error(
+        `\n\n\n\nThe url provided "${nUrl.toString()}" isn't supported. Use a proper listing url containing a ?searchQueryState= parameter\n\n\n\n`
+    );
 };
 
 /**
@@ -707,7 +786,9 @@ const getUniqueKeyFromQueryState = (queryState, nonce = []) => {
         ],
         queryState.pagination?.currentPage || 1,
         // sort the keys so they are always the same
-        Object.entries(queryState.filterState ?? {}).sort(([key1], [key2]) => `${key1}`.localeCompare(`${key2}`)),
+        Object.entries(queryState.filterState ?? {}).sort(([key1], [key2]) =>
+            `${key1}`.localeCompare(`${key2}`)
+        ),
         nonce,
     ]);
 };
@@ -743,14 +824,7 @@ const getUniqueKeyFromQueryState = (queryState, nonce = []) => {
  * }} params
  * @return {Promise<(data: RAW, args?: Record<string, any>) => Promise<void>>}
  */
-const extendFunction = async ({
-    key,
-    output,
-    filter,
-    map,
-    input,
-    helpers,
-}) => {
+const extendFunction = async ({ key, output, filter, map, input, helpers }) => {
     /**
      * @type {PARAMS<HELPERS>}
      */
@@ -762,8 +836,8 @@ const extendFunction = async ({
 
     const evaledFn = (() => {
         // need to keep the same signature for no-op
-        if (typeof input[key] !== 'string' || input[key].trim() === '') {
-            return new vm.Script('({ item }) => item');
+        if (typeof input[key] !== "string" || input[key].trim() === "") {
+            return new vm.Script("({ item }) => item");
         }
 
         try {
@@ -800,16 +874,16 @@ const extendFunction = async ({
 
         for (const item of await splitMap(data, merged)) {
             if (filter && !(await filter({ data, item }, merged))) {
-                continue; // eslint-disable-line no-continue
+                continue;
             }
 
-            const result = await (evaledFn.runInThisContext()({
+            const result = await evaledFn.runInThisContext()({
                 ...merged,
                 data,
                 item,
-            }));
+            });
 
-            for (const out of (Array.isArray(result) ? result : [result])) {
+            for (const out of Array.isArray(result) ? result : [result]) {
                 if (output) {
                     if (out !== null) {
                         await output(out, { ...merged, data, item });
@@ -839,22 +913,31 @@ const parseTimeUnit = (value, inTheFuture) => {
     }
 
     switch (value) {
-        case 'today':
-        case 'yesterday': {
-            const startDate = (value === 'today' ? moment.utc() : moment.utc().subtract(1, 'day'));
+        case "today":
+        case "yesterday": {
+            const startDate =
+                value === "today"
+                    ? moment.utc()
+                    : moment.utc().subtract(1, "day");
 
             return inTheFuture
-                ? startDate.endOf('day')
-                : startDate.startOf('day');
+                ? startDate.endOf("day")
+                : startDate.startOf("day");
         }
         default: {
             // valid integer, needs to be typecast into a number
             // non-milliseconds needs to be converted to milliseconds
             if (+value == value) {
-                return moment.utc(+value / 1e10 < 1 ? +value * 1000 : +value, true);
+                return moment.utc(
+                    +value / 1e10 < 1 ? +value * 1000 : +value,
+                    true
+                );
             }
 
-            const [, number, unit] = `${value}`.match(/^(\d+)\s?(minute|second|day|hour|month|year|week)s?$/i) || [];
+            const [, number, unit] =
+                `${value}`.match(
+                    /^(\d+)\s?(minute|second|day|hour|month|year|week)s?$/i
+                ) || [];
 
             if (+number && unit) {
                 return inTheFuture
@@ -892,7 +975,9 @@ const minMaxDates = ({ min, max }) => {
     const maxDate = parseTimeUnit(max, true);
 
     if (minDate && maxDate && maxDate.diff(minDate) < 0) {
-        throw new Error(`Minimum date ${minDate.toString()} needs to be less than max date ${maxDate.toString()}`);
+        throw new Error(
+            `Minimum date ${minDate.toString()} needs to be less than max date ${maxDate.toString()}`
+        );
     }
 
     return {
@@ -919,7 +1004,10 @@ const minMaxDates = ({ min, max }) => {
          */
         compare(time) {
             const base = parseTimeUnit(time, false);
-            return (minDate ? minDate.diff(base) <= 0 : true) && (maxDate ? maxDate.diff(base) >= 0 : true);
+            return (
+                (minDate ? minDate.diff(base) <= 0 : true) &&
+                (maxDate ? maxDate.diff(base) >= 0 : true)
+            );
         },
     };
 };
@@ -930,7 +1018,7 @@ const minMaxDates = ({ min, max }) => {
 const patchLog = (crawler) => {
     const originalException = crawler.log.exception.bind(crawler.log);
     crawler.log.exception = (/** @type {any[]} */ ...args) => {
-        if (!args?.[1]?.includes('handleRequestFunction')) {
+        if (!args?.[1]?.includes("handleRequestFunction")) {
             originalException(...args);
         }
     };

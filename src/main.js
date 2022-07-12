@@ -1,14 +1,19 @@
-const Apify = require('apify');
-const { LABELS, INITIAL_URL, URL_PATTERNS_TO_BLOCK, ORIGIN } = require('./constants');
-const { PageHandler } = require('./page-handler');
+const Apify = require("apify");
+const {
+    LABELS,
+    INITIAL_URL,
+    URL_PATTERNS_TO_BLOCK,
+    ORIGIN,
+} = require("./constants");
+const { PageHandler } = require("./page-handler");
 const {
     getExtendOutputFunction,
     getSimpleResultFunction,
     validateInput,
     getInitializedStartUrls,
     initializePreLaunchHooks,
-} = require('./initialization');
-const fns = require('./functions');
+} = require("./initialization");
+const fns = require("./functions");
 
 const {
     createQueryZpid,
@@ -40,8 +45,8 @@ Apify.main(async () => {
         },
     });
 
-    if (proxyConfig?.groups?.includes('RESIDENTIAL')) {
-        proxyConfig.countryCode = 'US';
+    if (proxyConfig?.groups?.includes("RESIDENTIAL")) {
+        proxyConfig.countryCode = "US";
     }
 
     const minMaxDate = minMaxDates({
@@ -59,6 +64,7 @@ Apify.main(async () => {
      *   crawler: Apify.PuppeteerCrawler,
      * }}
      */
+    // @ts-ignore
     const globalContext = {
         zpidsHandler,
         input,
@@ -75,31 +81,42 @@ Apify.main(async () => {
     /**
      * @type {any}
      */
-    const savedQueryId = await Apify.getValue('QUERY');
+    const savedQueryId = await Apify.getValue("QUERY");
 
     if (savedQueryId?.queryId && savedQueryId?.clientVersion) {
-        queryZpid = createQueryZpid(savedQueryId.queryId, savedQueryId.clientVersion);
+        queryZpid = createQueryZpid(
+            savedQueryId.queryId,
+            savedQueryId.clientVersion
+        );
 
         await loadQueue();
     } else {
-        await requestQueue.addRequest({
-            url: INITIAL_URL,
-            uniqueKey: `${Math.random()}`,
-            headers: {
-                referer: ORIGIN,
+        await requestQueue.addRequest(
+            {
+                url: INITIAL_URL,
+                uniqueKey: `${Math.random()}`,
+                headers: {
+                    referer: ORIGIN,
+                },
+                userData: {
+                    label: LABELS.INITIAL,
+                },
             },
-            userData: {
-                label: LABELS.INITIAL,
-            },
-        }, { forefront: true });
+            { forefront: true }
+        );
     }
 
-    const extendOutputFunction = await getExtendOutputFunction(globalContext, minMaxDate, getSimpleResult);
+    const extendOutputFunction = await getExtendOutputFunction(
+        // @ts-ignore
+        globalContext,
+        minMaxDate,
+        getSimpleResult
+    );
 
     const extendScraperFunction = await extendFunction({
         output: async () => {}, // no-op
         input,
-        key: 'extendScraperFunction',
+        key: "extendScraperFunction",
         helpers: {
             proxyConfig,
             getUrlData,
@@ -118,7 +135,7 @@ Apify.main(async () => {
     });
 
     await extendScraperFunction(undefined, {
-        label: 'SETUP',
+        label: "SETUP",
     });
 
     let isFinishing = false;
@@ -145,20 +162,32 @@ Apify.main(async () => {
         preLaunchHooks: initializePreLaunchHooks(input),
         fingerprintsOptions: {
             fingerprintGeneratorOptions: {
-                browsers: ['chrome', 'firefox'],
-                devices: ['desktop'],
-                locales: ['en-US', 'en-GB', 'en'],
+                // @ts-ignore
+                browsers: ["chrome", "firefox"],
+                // @ts-ignore
+                devices: ["desktop"],
+                locales: ["en-US", "en-GB", "en"],
             },
         },
         maxOpenPagesPerBrowser: 1,
         retireBrowserAfterPageCount: 1,
-        prePageCloseHooks: [async (page, browserController) => {
-            const context = crawler.crawlingContexts.get(browserController.launchContext.id);
+        prePageCloseHooks: [
+            // @ts-ignore
+            async (page, browserController) => {
+                const context = crawler.crawlingContexts.get(
+                    browserController.launchContext.id
+                );
 
-            if (context?.request?.errorMessages?.some((error) => error.includes('ERR_TOO_MANY_REDIRECTS'))) {
-                context.request.noRetry = true;
-            }
-        }],
+                if (
+                    // @ts-ignore
+                    context?.request?.errorMessages?.some((error) =>
+                        error.includes("ERR_TOO_MANY_REDIRECTS")
+                    )
+                ) {
+                    context.request.noRetry = true;
+                }
+            },
+        ],
     };
 
     // Create crawler
@@ -171,6 +200,7 @@ Apify.main(async () => {
         useSessionPool: true,
         sessionPoolOptions: {
             maxPoolSize: 30,
+            // @ts-ignore
             sessionOptions: {
                 maxErrorScore: 0.5,
             },
@@ -179,65 +209,75 @@ Apify.main(async () => {
         launchContext: {
             useIncognitoPages: true,
         },
-        preNavigationHooks: [async ({ request, page }, gotoOptions) => {
-            if (isFinishing) {
-                // avoid browser-pool errors with Target closed.
-                request.noRetry = true;
-                throw new Error('Ending scrape');
-            }
-
-            /** @type {any} */
-            await puppeteer.blockRequests(page, {
-                urlPatterns: URL_PATTERNS_TO_BLOCK.concat([
-                    LABELS.DETAIL,
-                    LABELS.ZPIDS,
-                    LABELS.ENRICHED_ZPIDS,
-                ].includes(request.userData.label) ? [
-                        'maps.googleapis.com',
-                        '.js',
-                    ] : []),
-            });
-
-            await extendScraperFunction(undefined, {
-                page,
-                request,
-                label: 'GOTO',
-            });
-
-            gotoOptions.timeout = 45000;
-            gotoOptions.waitUntil = 'domcontentloaded';
-        }],
-        persistCookiesPerSession: false,
-        postNavigationHooks: [async ({ page }) => {
-            try {
-                if (!page.isClosed()) {
-                    await page.bringToFront();
+        preNavigationHooks: [
+            async ({ request, page }, gotoOptions) => {
+                if (isFinishing) {
+                    // avoid browser-pool errors with Target closed.
+                    request.noRetry = true;
+                    throw new Error("Ending scrape");
                 }
-            } catch (e) {}
 
-            if (globalContext.zpidsHandler.isOverItems() && !isFinishing) {
-                isFinishing = true;
+                /** @type {any} */
+                await puppeteer.blockRequests(page, {
+                    urlPatterns: URL_PATTERNS_TO_BLOCK.concat(
+                        [
+                            LABELS.DETAIL,
+                            LABELS.ZPIDS,
+                            LABELS.ENRICHED_ZPIDS,
+                        ].includes(request.userData.label)
+                            ? ["maps.googleapis.com", ".js"]
+                            : []
+                    ),
+                });
+
+                await extendScraperFunction(undefined, {
+                    page,
+                    request,
+                    label: "GOTO",
+                });
+
+                gotoOptions.timeout = 45000;
+                gotoOptions.waitUntil = "domcontentloaded";
+            },
+        ],
+        persistCookiesPerSession: false,
+        postNavigationHooks: [
+            async ({ page }) => {
                 try {
-                    log.info('Reached maximum items, waiting for finish');
-                    if (crawlerWrapper?.crawler?.autoscaledPool) {
-                        await Promise.all([
-                            crawlerWrapper.crawler.autoscaledPool.pause(),
-                            // @ts-ignore
-                            crawlerWrapper.crawler.autoscaledPool.resolve(),
-                        ]);
+                    if (!page.isClosed()) {
+                        await page.bringToFront();
                     }
                 } catch (e) {}
-            }
-        }],
+
+                if (globalContext.zpidsHandler.isOverItems() && !isFinishing) {
+                    isFinishing = true;
+                    try {
+                        log.info("Reached maximum items, waiting for finish");
+                        if (crawlerWrapper?.crawler?.autoscaledPool) {
+                            await Promise.all([
+                                crawlerWrapper.crawler.autoscaledPool.pause(),
+                                // @ts-ignore
+                                crawlerWrapper.crawler.autoscaledPool.resolve(),
+                            ]);
+                        }
+                    } catch (e) {}
+                }
+            },
+        ],
         browserPoolOptions,
         maxConcurrency: !queryZpid ? 1 : 10,
         handlePageFunction: async (context) => {
             const { page, request, session, response } = context;
-            const pageHandler = new PageHandler(context, globalContext, extendOutputFunction, !queryZpid);
+            const pageHandler = new PageHandler(
+                context,
+                globalContext,
+                extendOutputFunction,
+                !queryZpid
+            );
 
             if (!response || globalContext.zpidsHandler.isOverItems()) {
                 if (!response) {
-                    throw new Error('No response from page');
+                    throw new Error("No response from page");
                 }
                 return;
             }
@@ -247,10 +287,16 @@ Apify.main(async () => {
             const { label } = request.userData;
 
             if (label === LABELS.INITIAL || !queryZpid) {
-                queryZpid = await pageHandler.handleInitialPage(queryZpid, loadQueue);
+                queryZpid = await pageHandler.handleInitialPage(
+                    queryZpid,
+                    loadQueue
+                );
             } else if (label === LABELS.DETAIL) {
                 await pageHandler.handleDetailPage();
-            } else if (label === LABELS.ZPIDS || label === LABELS.ENRICHED_ZPIDS) {
+            } else if (
+                label === LABELS.ZPIDS ||
+                label === LABELS.ENRICHED_ZPIDS
+            ) {
                 await pageHandler.handleZpidsPage(queryZpid);
             } else if (label === LABELS.QUERY || label === LABELS.SEARCH) {
                 await pageHandler.handleQueryAndSearchPage(label);
@@ -263,18 +309,23 @@ Apify.main(async () => {
                 pageHandler,
                 processZpid: pageHandler.processZpid,
                 queryZpid,
-                label: 'HANDLE',
+                label: "HANDLE",
             });
 
             if (pageHandler.foundAnyErrors()) {
                 session.retire();
-                throw new Error('Retiring session and browser...');
+                throw new Error("Retiring session and browser...");
             }
         },
         handleFailedRequestFunction: async ({ request, error }) => {
             // This function is called when the crawling of a request failed too many times
             if (request.retryCount) {
-                log.error(request.noRetry ? 'Stopped retrying request' : `${request.url} failed too many times`, { error: error.message });
+                log.error(
+                    request.noRetry
+                        ? "Stopped retrying request"
+                        : `${request.url} failed too many times`,
+                    { error: error.message }
+                );
             }
         },
     });
@@ -289,7 +340,7 @@ Apify.main(async () => {
     await crawler.run();
 
     await extendScraperFunction(undefined, {
-        label: 'FINISH',
+        label: "FINISH",
         crawler,
     });
 
@@ -297,7 +348,9 @@ Apify.main(async () => {
 
     if (!queryZpid) {
         // this usually means the proxy is busted, we need to fail
-        throw new Error('The selected proxy group seems to be blocked, try a different one or contact Apify on Intercom');
+        throw new Error(
+            "The selected proxy group seems to be blocked, try a different one or contact Apify on Intercom"
+        );
     }
 
     log.info(`Done with ${globalContext.zpidsHandler.count} listings!`);

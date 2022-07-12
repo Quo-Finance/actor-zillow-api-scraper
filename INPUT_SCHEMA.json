@@ -4,7 +4,7 @@
     "schemaVersion": 1,
     "properties": {
         "search": {
-            "title": "Search",
+            "title": "Test string",
             "type": "string",
             "editor": "textarea",
             "prefill": "Los Angeles",
@@ -16,13 +16,7 @@
             "description": "Property for sale/rent",
             "default": "all",
             "prefill": "all",
-            "enum": [
-                "all",
-                "sale",
-                "fsbo",
-                "rent",
-                "sold"
-            ],
+            "enum": ["all", "sale", "fsbo", "rent", "sold"],
             "enumTitles": [
                 "All",
                 "For sale",
