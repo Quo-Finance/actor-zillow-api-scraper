@@ -265,7 +265,6 @@ Apify.main(async () => {
             },
         ],
         browserPoolOptions,
-        maxConcurrency: !queryZpid ? 1 : 10,
         handlePageFunction: async (context) => {
             const { page, request, session, response } = context;
             const pageHandler = new PageHandler(
