@@ -365,8 +365,6 @@ const getSimpleResultFunction = (input) => {
         propertyTaxRate: true,
         pageViewCount: true,
         favoriteCount: true,
-        url: true,
-        photos: true,
         responsivePhotos: true,
     };
 
