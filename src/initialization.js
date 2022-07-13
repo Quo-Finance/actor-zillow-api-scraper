@@ -355,6 +355,9 @@ const getSimpleResultFunction = (input) => {
         livingArea: true,
         currency: true,
         homeType: true,
+        hdpUrl: true,
+        homeType: true,
+        datePosted: true,
         datePostedString: true,
         newConstructionType: true,
         lastSoldPrice: true,
@@ -365,6 +368,8 @@ const getSimpleResultFunction = (input) => {
         favoriteCount: true,
         url: true,
         photos: true,
+        responsivePhotos: true,
+        lotSize: true,
     };
 
     const fullResult = {
