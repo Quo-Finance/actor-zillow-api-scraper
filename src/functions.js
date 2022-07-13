@@ -697,7 +697,7 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
         return result;
     }
 
-    console.log({ data });
+    log.debug({ data });
 
     Object.keys(attributes).forEach((key) => {
         // allow 0 and null values to be output. undefined will be omitted anyway
@@ -706,7 +706,7 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
         }
     });
 
-    console.log({ result });
+    log.debug({ result });
 
     if (result.hdpUrl) {
         result.url = new URL(result.hdpUrl, ORIGIN).toString();
