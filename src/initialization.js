@@ -356,7 +356,6 @@ const getSimpleResultFunction = (input) => {
         currency: true,
         homeType: true,
         hdpUrl: true,
-        homeType: true,
         datePosted: true,
         datePostedString: true,
         newConstructionType: true,
@@ -369,7 +368,6 @@ const getSimpleResultFunction = (input) => {
         url: true,
         photos: true,
         responsivePhotos: true,
-        lotSize: true,
     };
 
     const fullResult = {
