@@ -697,12 +697,16 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
         return result;
     }
 
+    console.log({ data });
+
     Object.keys(attributes).forEach((key) => {
         // allow 0 and null values to be output. undefined will be omitted anyway
         if (key in data) {
             result[key] = data[key];
         }
     });
+
+    console.log({ result });
 
     if (result.hdpUrl) {
         result.url = new URL(result.hdpUrl, ORIGIN).toString();
