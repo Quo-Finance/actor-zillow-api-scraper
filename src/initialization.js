@@ -268,6 +268,7 @@ const getExtendOutputFunction = async (
     minMaxDate,
     getSimpleResult
 ) => {
+    log.debug("inside of getExtendedOutputFunction");
     const extendOutputFunction = await extendFunction({
         map: async (data) => {
             if (input.rawOutput === true) {
@@ -340,6 +341,8 @@ const getExtendOutputFunction = async (
  */
 const getSimpleResultFunction = (input) => {
     // Toggle showing only a subset of result attributes
+
+    log.debug("simple", input);
 
     const simpleResult = {
         zpid: true,

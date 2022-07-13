@@ -688,12 +688,15 @@ const createQueryZpid = (queryId, clientVersion) => (page, zpid, detailUrl) => {
  * @param {Record<string, boolean>} attributes
  */
 const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
+    log.debug("inside of createGetSimpleResult");
+
     /**
      * @type {Record<string, any>}
      */
     const result = {};
 
     if (!data) {
+        log.debug("not data");
         return result;
     }
 
