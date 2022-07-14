@@ -949,7 +949,7 @@ class PageHandler {
                         : result;
 
                     if (zpid) {
-                        const failed = await this.processZpid(
+                        const succeeded = await this.processZpid(
                             zpid,
                             detailUrl,
                             queryZpid,
@@ -960,7 +960,7 @@ class PageHandler {
                             break; // optimize runtime
                         }
 
-                        if (failed) {
+                        if (!succeeded) {
                             // Session is dead, stop processing
                             // and re-enque a request with the remaining
                             // zpids to be processed
