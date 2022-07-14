@@ -453,10 +453,10 @@ class PageHandler {
                 { forefront: true }
             );
 
-        if (relaxed) {
-            log.debug("Enqueuing relaxed zpid", { zpid });
-            return enqueueZpid();
-        }
+        // if (relaxed) {
+        //     log.debug("Enqueuing relaxed zpid", { zpid });
+        //     return enqueueZpid();
+        // }
 
         const invalidNonNumeric = "Invalid non-numeric zpid";
         const notZpid = `Zpid not string or number`;
