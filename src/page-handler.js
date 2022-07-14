@@ -433,7 +433,7 @@ class PageHandler {
         const { isOverItems, has } = this.globalContext.zpidsHandler;
 
         if (isOverItems()) {
-            return;
+            return true;
         }
 
         const normalizedZpid = fns.normalizeZpid(zpid);
@@ -467,7 +467,7 @@ class PageHandler {
             if (!normalizedZpid) {
                 noWait = true;
                 log.debug("Invalid zpid", { zpid });
-                return;
+                return true;
             }
 
             if (has(normalizedZpid)) {
@@ -475,12 +475,12 @@ class PageHandler {
                 log.debug(
                     `Zpids already contain zpid ${normalizedZpid}, going for next parse`
                 );
-                return;
+                return true;
             }
 
             if (!session.isUsable()) {
-                this.context.session =
-                    await this.context.session.sessionPool.getSession();
+                log.debug("Session no longer usable");
+                return false;
             }
 
             log.debug(`Extracting ${normalizedZpid}`);
@@ -492,7 +492,7 @@ class PageHandler {
                 parsedData = JSON.parse(data);
             } catch (e) {
                 log.debug("Failed to parse data", { data });
-                return;
+                return false;
             }
 
             await this.extendOutputFunction(parsedData.data.property, {
@@ -503,13 +503,13 @@ class PageHandler {
             });
         } catch (e) {
             if (isOverItems()) {
-                return;
+                return true;
             }
 
             if ([notZpid, invalidNonNumeric].includes(e.message)) {
                 noWait = true;
                 log.debug(`processZpid: ${e.message} - ${zpid}`);
-                return;
+                return true;
             }
 
             log.debug("processZpid", { error: e.message });
@@ -519,11 +519,13 @@ class PageHandler {
 
             this.anyErrors = true;
             session.retire();
+            return false;
         } finally {
             if (!noWait) {
                 await sleep(100);
             }
         }
+        return true;
     }
 
     foundAnyErrors() {
@@ -926,6 +928,7 @@ class PageHandler {
      */
     async _extractZpidsFromResults(results, queryZpid) {
         const { isOverItems } = this.globalContext.zpidsHandler;
+        const { requestQueue, request } = this.context;
 
         if (isOverItems()) {
             return;
@@ -935,7 +938,8 @@ class PageHandler {
             const stop = this.startCounter();
 
             try {
-                for (const result of results) {
+                for (let i = 0; i < results.length; i++) {
+                    const result = results[i];
                     const {
                         zpid,
                         detailUrl = "",
@@ -945,7 +949,7 @@ class PageHandler {
                         : result;
 
                     if (zpid) {
-                        await this.processZpid(
+                        const failed = await this.processZpid(
                             zpid,
                             detailUrl,
                             queryZpid,
@@ -954,6 +958,25 @@ class PageHandler {
 
                         if (isOverItems()) {
                             break; // optimize runtime
+                        }
+
+                        if (failed) {
+                            // Session is dead, stop processing
+                            // and re-enque a request with the remaining
+                            // zpids to be processed
+                            const remainingZPIDS = results.slice(i);
+                            requestQueue?.addRequest(
+                                {
+                                    request.url,
+                                    uniqueKey: fns.quickHash(["ZPIDS", remainingZPIDS]),
+                                    userData: {
+                                        label: LABELS.ENRICHED_ZPIDS,
+                                        remainingZPIDS,
+                                    },
+                                },
+                                { forefront: true }
+                            );
+                            break;
                         }
                     }
                 }
