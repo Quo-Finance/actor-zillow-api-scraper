@@ -928,7 +928,7 @@ class PageHandler {
      */
     async _extractZpidsFromResults(results, queryZpid) {
         const { isOverItems } = this.globalContext.zpidsHandler;
-        const { requestQueue, request } = this.context;
+        const { requestQueue, request: currRequest } = this.context;
 
         if (isOverItems()) {
             return;
@@ -967,8 +967,11 @@ class PageHandler {
                             const remainingZPIDS = results.slice(i);
                             requestQueue?.addRequest(
                                 {
-                                    request.url,
-                                    uniqueKey: fns.quickHash(["ZPIDS", remainingZPIDS]),
+                                    url: currRequest.url,
+                                    uniqueKey: fns.quickHash([
+                                        "ZPIDS",
+                                        remainingZPIDS,
+                                    ]),
                                     userData: {
                                         label: LABELS.ENRICHED_ZPIDS,
                                         remainingZPIDS,
