@@ -485,16 +485,22 @@ class PageHandler {
 
             log.debug(`Extracting ${normalizedZpid}`);
 
-            await this.extendOutputFunction(
-                JSON.parse(await queryZpid(page, normalizedZpid, detailUrl))
-                    .data.property,
-                {
-                    request,
-                    page,
-                    zpid: normalizedZpid,
-                    pageHandler: this,
-                }
-            );
+            const data = await queryZpid(page, normalizedZpid, detailUrl);
+
+            let parsedData = {};
+            try {
+                parsedData = JSON.parse(data);
+            } catch (e) {
+                log.debug("Failed to parse data", { data });
+                return;
+            }
+
+            await this.extendOutputFunction(parsedData.data.property, {
+                request,
+                page,
+                zpid: normalizedZpid,
+                pageHandler: this,
+            });
         } catch (e) {
             if (isOverItems()) {
                 return;
