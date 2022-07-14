@@ -658,7 +658,7 @@ const evaluateQueryZpid = async ({
         }
     );
 
-    throw new Error("Fetch response: " + (await resp.blob()).text());
+    throw new Error("Fetch response: " + (await (await resp.blob()).text()));
 
     if (resp.status !== 200) {
         throw new Error(`Got status ${resp.status} from GraphQL`);
