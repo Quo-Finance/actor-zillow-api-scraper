@@ -688,19 +688,14 @@ const createQueryZpid = (queryId, clientVersion) => (page, zpid, detailUrl) => {
  * @param {Record<string, boolean>} attributes
  */
 const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
-    log.debug("inside of createGetSimpleResult");
-
     /**
      * @type {Record<string, any>}
      */
     const result = {};
 
     if (!data) {
-        log.debug("not data");
         return result;
     }
-
-    log.debug("full data", { data });
 
     Object.keys(attributes).forEach((key) => {
         // allow 0 and null values to be output. undefined will be omitted anyway
@@ -708,8 +703,6 @@ const createGetSimpleResult = (attributes) => (/** @type {any} */ data) => {
             result[key] = data[key];
         }
     });
-
-    log.debug("full result", { result });
 
     if (result.hdpUrl) {
         result.url = new URL(result.hdpUrl, ORIGIN).toString();
