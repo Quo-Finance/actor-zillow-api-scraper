@@ -428,7 +428,8 @@ class PageHandler {
      * @param {boolean} relaxed Relaxed results are incomplete, so needs full page load
      */
     async processZpid(zpid, detailUrl, queryZpid, relaxed = false) {
-        const { page, request, requestQueue, session } = this.context;
+        const { page, request, requestQueue } = this.context;
+        let { session } = this.context;
         const { isOverItems, has } = this.globalContext.zpidsHandler;
 
         if (isOverItems()) {
@@ -478,9 +479,7 @@ class PageHandler {
             }
 
             if (!session.isUsable()) {
-                throw new Error(
-                    "Not trying to retrieve data, session is not usable anymore"
-                );
+                session = await session.sessionPool.getSession();
             }
 
             log.debug(`Extracting ${normalizedZpid}`);
