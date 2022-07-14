@@ -479,7 +479,8 @@ class PageHandler {
             }
 
             if (!session.isUsable()) {
-                session = await session.sessionPool.getSession();
+                this.context.session =
+                    await this.context.session.sessionPool.getSession();
             }
 
             log.debug(`Extracting ${normalizedZpid}`);
@@ -508,7 +509,7 @@ class PageHandler {
             log.debug("processZpid", { error: e.message });
 
             // add as a separate detail for retrying
-            await enqueueZpid();
+            //await enqueueZpid();
 
             this.anyErrors = true;
             session.retire();
