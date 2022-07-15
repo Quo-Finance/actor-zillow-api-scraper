@@ -487,6 +487,8 @@ class PageHandler {
 
             const data = await queryZpid(page, normalizedZpid, detailUrl);
 
+            log.debug("Data for zpid fetched", { zpid: normalizedZpid, data });
+
             let parsedData = {};
             try {
                 parsedData = JSON.parse(data);
@@ -494,6 +496,8 @@ class PageHandler {
                 log.debug("Failed to parse data", { data });
                 return false;
             }
+
+            log.debug("Outputting data for zpid", { zpid: normalizedZpid });
 
             await this.extendOutputFunction(parsedData.data.property, {
                 request,

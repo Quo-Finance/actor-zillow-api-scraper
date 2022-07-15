@@ -286,18 +286,29 @@ const getExtendOutputFunction = async (
             }
 
             if (zpidsHandler.has(data.zpid)) {
+                log.debug("Skipping already visited zpid: " + data.zpid);
                 return false;
             }
 
             if (minMaxDate.isComparable && data.datePostedString) {
                 if (!minMaxDate.compare(data.datePostedString)) {
+                    log.debug(
+                        `Skipping zpid ${data.zpid} because it is older than ${minMaxDate}`
+                    );
                     return false;
                 }
             }
 
             switch (input.type) {
                 case "sale":
-                    return data.homeStatus === "FOR_SALE";
+                    if (data.homeStatus === "FOR_SALE") {
+                        return true;
+                    } else {
+                        log.debug("Skipping because not for sale", {
+                            zpid: data.zpid,
+                        });
+                        return false;
+                    }
                 case "fsbo":
                     return (
                         data.homeStatus === "FOR_SALE" &&
