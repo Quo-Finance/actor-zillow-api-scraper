@@ -209,7 +209,7 @@ Check if your start urls match the desired home status.`);
                 const cleanZip = `${zipcode}`.replace(/[^\d]+/g, "");
 
                 const result = await rq.addRequest({
-                    url: `https://www.zillow.com/homes/${cleanZip}_rb/`,
+                    url: `https://www.zillow.com/homes/${cleanZip}_rb/house,condo,townhouse_type`,
                     uniqueKey: `ZIP${cleanZip}`,
                     userData: {
                         label: LABELS.QUERY,
