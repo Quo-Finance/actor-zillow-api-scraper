@@ -377,6 +377,8 @@ const getSimpleResultFunction = (input) => {
         pageViewCount: true,
         favoriteCount: true,
         responsivePhotos: true,
+        isListedByOwner: true,
+        brokerageName: true,
     };
 
     const fullResult = {
