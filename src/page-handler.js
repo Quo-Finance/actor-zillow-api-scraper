@@ -500,9 +500,8 @@ class PageHandler {
 
             log.debug("Outputting data for zpid", { zpid: normalizedZpid });
 
-            log.debug("Property address is ", parsedData.property.address);
-
             log.debug("Input zips is ", this.globalContext.input.zipcodes);
+            log.debug("Property address is ", parsedData.data.property.address);
 
             await this.extendOutputFunction(parsedData.data.property, {
                 request,
