@@ -512,7 +512,7 @@ class PageHandler {
             console.log("Property is in zip ", zip);
 
             if (!this.globalContext.input.zipcodes.includes(zip)) {
-                requestQueue.markRequestHandled();
+                requestQueue.markRequestHandled(request);
                 session.retire();
                 return true;
             }
