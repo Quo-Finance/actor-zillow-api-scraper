@@ -500,8 +500,21 @@ class PageHandler {
 
             log.debug("Outputting data for zpid", { zpid: normalizedZpid });
 
-            log.debug("Input zips is ", this.globalContext.input.zipcodes);
-            log.debug("Property address is ", parsedData.data.property.address);
+            log.debug("First zip is ", this.globalContext.input.zipcodes[0]);
+
+            //TODO: confirm input type
+            const zip =
+                parsedData.data &&
+                parsedData.data.property &&
+                parsedData.data.property.address &&
+                parseInt(parsedData.data.property.address.zipcode);
+
+            console.log("Property is in zip ", zip);
+
+            if (!this.globalContext.input.zipcodes.includes(zip)) {
+                session.retire();
+                return true;
+            }
 
             await this.extendOutputFunction(parsedData.data.property, {
                 request,
