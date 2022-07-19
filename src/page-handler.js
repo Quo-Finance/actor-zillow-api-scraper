@@ -42,6 +42,7 @@ class PageHandler {
      *      handlePageTimeoutSecs: number,
      *      includeRelaxedResults: boolean,
      *      zpids: any[],
+     *      zipcodes?: any[],
      *  },
      * }} globalContext
      * @param {*} extendOutputFunction
@@ -498,6 +499,10 @@ class PageHandler {
             }
 
             log.debug("Outputting data for zpid", { zpid: normalizedZpid });
+
+            log.debug("Property address is ", parsedData.property.address);
+
+            log.debug("Input zips is ", this.globalContext.input.zipcodes);
 
             await this.extendOutputFunction(parsedData.data.property, {
                 request,
